@@ -1,0 +1,59 @@
+name: 'Traefik Hub'
+description: 'Static Analysis on Traefik Hub CRD'
+branding:
+  icon: 'shield'
+  color: 'gray-dark'
+inputs:
+  path:
+    description: 'path to the manifests within a Git repository'
+    required: true
+  lint-format:
+    description: 'log format, one of: unix, json, checkstyle'
+    required: false
+    default: 'unix'
+  output-file:
+    description: 'Filename to store output. File will be overwritten if it exists. Default: "traefik-hub-static-analyzer.out"'
+    required: false
+    default: 'traefik-hub-static-analyzer.out'
+  version:
+    description: 'Version of hub-static-analyzer to use. E.g. "0.1.0". Default: "latest"'
+    required: false
+    default: 'latest'
+runs:
+  using: "composite"
+  steps:
+    - name: Download hub-static-analyzer
+      shell: bash
+      run: |
+        set -u
+
+        RELEASE_URL='https://api.github.com/repos/traefik/hub-static-analyzer/releases/latest'
+        if [[ "${{ inputs.version }}" != "latest" ]]; then
+          RELEASE_URL='https://api.github.com/repos/traefik/hub-static-analyzer/releases/tags/${{ inputs.version }}'
+        fi
+
+        # Pass Github Token to increase API limits.
+        RELEASE_INFO="$(curl --silent --show-error --fail \
+          --header 'Authorization: Bearer ${{ github.token }}' \
+          --header 'Cache-Control: no-cache, must-revalidate' \
+          "${RELEASE_URL}")"
+
+        RELEASE_NAME="$(echo "${RELEASE_INFO}" | jq --raw-output ".name")"
+
+        LOCATION="$(echo "${RELEASE_INFO}" \
+          | jq --raw-output ".assets[].browser_download_url" \
+          | grep --fixed-strings "hub-static-analyzer-${OS}.tar.gz")"
+
+        TARGET="kube-linter-${RELEASE_NAME}.tar.gz"
+
+        # Skip downloading release if already downloaded.
+        if [[ ! -e "$TARGET" ]]; then
+          curl --silent --show-error --fail --location --output "$TARGET" "$LOCATION"
+          tar -xf "$TARGET"
+        fi
+    - name: Lint manifests
+      shell: bash
+      run: |
+        set -u
+
+        ./kube-linter lint "${{ inputs.path }}" --format "${{ inputs.lint-format }}" | tee "${{ inputs.output-file }}"

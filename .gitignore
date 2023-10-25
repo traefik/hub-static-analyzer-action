@@ -1,0 +1,7 @@
+.idea/
+.intellij/
+*.iml
+.vscode/
+.DS_Store
+*.log
+cover.out

@@ -4,14 +4,14 @@ branding:
   icon: 'shield'
   color: 'gray-dark'
 inputs:
+  version:
+    description: 'Version of hub-static-analyzer to use. E.g. "v0.1.0". Default: "latest"'
+    required: false
+    default: 'latest'
   path:
     description: 'path to the manifests within a Git repository'
     required: false
     default: "./"
-  version:
-    description: 'Version of hub-static-analyzer to use. E.g. "0.1.0". Default: "latest"'
-    required: false
-    default: 'latest'
 
   # Lint options.
   lint:

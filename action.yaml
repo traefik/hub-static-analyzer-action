@@ -6,19 +6,39 @@ branding:
 inputs:
   path:
     description: 'path to the manifests within a Git repository'
-    required: true
-  lint-format:
-    description: 'log format, one of: unix, json, checkstyle'
     required: false
-    default: 'unix'
-  output-file:
-    description: 'Filename to store output. File will be overwritten if it exists. Default: "traefik-hub-static-analyzer.out"'
-    required: false
-    default: 'traefik-hub-static-analyzer.out'
+    default: "./"
   version:
     description: 'Version of hub-static-analyzer to use. E.g. "0.1.0". Default: "latest"'
     required: false
     default: 'latest'
+
+  # Lint options.
+  lint:
+    description: 'lint manifests. . Default: "false"'
+    required: false
+    default: "false"
+  lint-output-file:
+    description: 'Filename to store lint output. File will be overwritten if it exists. Default: "traefik-hub-static-analyzer-lint.out"'
+    required: false
+    default: 'traefik-hub-static-analyzer-lint.out'
+  lint-format:
+    description: 'format, one of: unix, json, checkstyle'
+    required: false
+    default: 'unix'
+
+  # Diff options.
+  diff:
+    description: 'generate a diff report. Default: "false"'
+    required: false
+    default: "false"
+  diff-range:
+    description: 'range of commits on which to run the diff. E.g. 12345d...12345b, HEAD~3'
+    required: false
+  diff-output-file:
+    description: 'Filename to store diff output. File will be overwritten if it exists. Default: "traefik-hub-static-analyzer-diff.out"'
+    required: false
+    default: 'traefik-hub-static-analyzer-diff.out'
 runs:
   using: "composite"
   steps:
@@ -32,7 +52,6 @@ runs:
           RELEASE_URL='https://api.github.com/repos/traefik/hub-static-analyzer/releases/tags/${{ inputs.version }}'
         fi
 
-        # Pass Github Token to increase API limits.
         RELEASE_INFO="$(curl --silent --show-error --fail \
           --header 'Authorization: Bearer ${{ github.token }}' \
           --header 'Cache-Control: no-cache, must-revalidate' \
@@ -40,20 +59,75 @@ runs:
 
         RELEASE_NAME="$(echo "${RELEASE_INFO}" | jq --raw-output ".name")"
 
-        LOCATION="$(echo "${RELEASE_INFO}" \
-          | jq --raw-output ".assets[].browser_download_url" \
-          | grep --fixed-strings "hub-static-analyzer-${OS}.tar.gz")"
+        if [ ${{ runner.arch }} = "ARM64" ]; then
+          RELEASE_ARCH="arm64"
+        elif [ ${{ runner.arch }} = "ARM" ]; then
+          RELEASE_ARCH="arm"
+        elif [ ${{ runner.arch }} = "X86" ]; then
+          RELEASE_ARCH="386"
+        elif [ ${{ runner.arch }} = "X64" ]; then
+          RELEASE_ARCH="amd64"
+        else
+          RELEASE_ARCH="amd64"
+        fi
 
-        TARGET="kube-linter-${RELEASE_NAME}.tar.gz"
+        if [ ${{ runner.os }} = "macOS" ]; then
+          RELEASE_OS="darwin"
+        elif [ ${{ runner.os }} = "Linux" ]; then
+          RELEASE_OS="linux"
+        else
+          RELEASE_OS="linux"
+        fi
+
+        echo "Preparing to download hub-static-analyzer (Version=${RELEASE_NAME}, OS=${RELEASE_OS}, Arch=${RELEASE_ARCH})"
+
+        ASSET_ID="$(echo "${RELEASE_INFO}" \
+          | jq --raw-output ".assets[] | select(.name | test(\"${RELEASE_OS}-${RELEASE_ARCH}.tar.gz\")) | .id")"
+
+        echo "Downloading asset ${ASSET_ID}..."
+
+        TARGET="hub-static-analyzer-${RELEASE_NAME}.tar.gz"
 
         # Skip downloading release if already downloaded.
         if [[ ! -e "$TARGET" ]]; then
-          curl --silent --show-error --fail --location --output "$TARGET" "$LOCATION"
-          tar -xf "$TARGET"
+          curl --silent --show-error --fail \
+            --header 'Accept: application/octet-stream' \
+            --header 'Authorization: Bearer ${{ github.token }}' \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            --location --output "${TARGET}" \
+            "https://api.github.com/repos/traefik/hub-static-analyzer/releases/assets/${ASSET_ID}"
+
+          tar -xf "$TARGET" --strip-components 1
         fi
-    - name: Lint manifests
+    - name: Run Static Analysis
       shell: bash
       run: |
         set -u
 
-        ./kube-linter lint "${{ inputs.path }}" --format "${{ inputs.lint-format }}" | tee "${{ inputs.output-file }}"
+        if [ ${{ inputs.lint }} = "true" ]; then
+          echo "linting..."
+
+          (./hub-static-analyzer lint --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" | tee "${{ inputs.lint-output-file }}")&
+
+          pids+=($!)
+        fi
+
+        if [ ${{ inputs.diff }} = "true" ]; then
+          echo "generating diff report..."
+
+          (./hub-static-analyzer diff --path "${{ inputs.path }}" ${{ inputs.diff-range }} | tee "${{ inputs.diff-output-file }}")&
+
+          pids+=($!)
+        fi
+
+        for pid in ${pids[@]}; do
+          wait ${pid}
+          statuses+=($?)
+        done
+
+        for st in ${statuses[@]}; do
+          if [[ ${st} -ne 0 ]]; then
+            exit ${st}
+            echo "FAILED!"
+          fi
+        done

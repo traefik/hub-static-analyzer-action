@@ -12,6 +12,10 @@ inputs:
     description: 'path to the manifests within a Git repository'
     required: false
     default: "./"
+  token:
+    description: 'GitHub token'
+    required: false
+    default: "${{ github.token }}"
 
   # Lint options.
   lint:
@@ -53,7 +57,7 @@ runs:
         fi
 
         RELEASE_INFO="$(curl --silent --show-error --fail \
-          --header 'Authorization: Bearer ${{ github.token }}' \
+          --header 'Authorization: Bearer ${{ inputs.token }}' \
           --header 'Cache-Control: no-cache, must-revalidate' \
           "${RELEASE_URL}")"
 
@@ -92,7 +96,7 @@ runs:
         if [[ ! -e "$TARGET" ]]; then
           curl --silent --show-error --fail \
             --header 'Accept: application/octet-stream' \
-            --header 'Authorization: Bearer ${{ github.token }}' \
+            --header 'Authorization: Bearer ${{ inputs.token }}' \
             --header 'X-GitHub-Api-Version: 2022-11-28' \
             --location --output "${TARGET}" \
             "https://api.github.com/repos/traefik/hub-static-analyzer/releases/assets/${ASSET_ID}"

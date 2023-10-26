@@ -128,6 +128,9 @@ runs:
           statuses+=($?)
         done
 
+        [ -s ${{ inputs.lint-output-file }} ] || rm -f ${{ inputs.lint-output-file }}
+        [ -s ${{ inputs.diff-output-file }} ] || rm -f ${{ inputs.diff-output-file }}
+
         echo "Statuses ${statuses}"
 
         for st in ${statuses[@]}; do

@@ -76,8 +76,40 @@ jobs:
 # Lint your manifests and display linting errors in PR
 
 ```yaml
+name: Check Traefik Hub CRDs
 
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+
+permissions:
+  checks: write
+  contents: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint Traefik Hub CRDs with hub-static-analyzer
+        uses: traefik/hub-static-analyzer-action@main
+        with:
+          lint: true
+          lint-format: checkstyle
+          lint-output-file: ./output.xml
+
+      - name: Annotate code
+        if: ${{ !cancelled() }}
+        uses: Juuxel/publish-checkstyle-report@v1
+        with:
+          reports: |
+            ./output.xml
 ```
+
+Note that if you are running it on a public repository or if you are GitHub enterprise customers, you can leverage SARIF output format
+to [submit a code scanning artifact](https://docs.github.com/en/code-security/code-scanning/integrating-with-code-scanning/uploading-a-sarif-file-to-github)
 
 
 # Generate a diff report and displays it in PR

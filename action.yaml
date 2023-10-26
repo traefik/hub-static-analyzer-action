@@ -107,18 +107,16 @@ runs:
       shell: bash
       run: |
         set -u
+        set +e
 
         if [ ${{ inputs.lint }} = "true" ]; then
           echo "linting..."
-
           (./hub-static-analyzer lint --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" | tee "${{ inputs.lint-output-file }}")&
 
           pids+=($!)
         fi
 
         if [ ${{ inputs.diff }} = "true" ]; then
-          echo "generating diff report..."
-
           (./hub-static-analyzer diff --path "${{ inputs.path }}" ${{ inputs.diff-range }} | tee "${{ inputs.diff-output-file }}")&
 
           pids+=($!)
@@ -126,12 +124,14 @@ runs:
 
         for pid in ${pids[@]}; do
           wait ${pid}
+
           statuses+=($?)
         done
 
+        echo "Statuses ${statuses}"
+
         for st in ${statuses[@]}; do
           if [[ ${st} -ne 0 ]]; then
-            exit ${st}
-            echo "FAILED!"
+            exit 1
           fi
         done

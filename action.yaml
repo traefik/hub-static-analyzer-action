@@ -16,6 +16,10 @@ inputs:
     description: 'GitHub token'
     required: false
     default: "${{ github.token }}"
+  exclude:
+    description: 'exclude the matching manifests'
+    required: false
+    default: ''
 
   # Lint options.
   lint:
@@ -111,13 +115,13 @@ runs:
 
         if [ ${{ inputs.lint }} = "true" ]; then
           echo "linting..."
-          (./hub-static-analyzer lint --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" | tee "${{ inputs.lint-output-file }}")&
+          (./hub-static-analyzer lint --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --exclude "${{ inputs.exclude }}" | tee "${{ inputs.lint-output-file }}")&
 
           pids+=($!)
         fi
 
         if [ ${{ inputs.diff }} = "true" ]; then
-          (./hub-static-analyzer diff --path "${{ inputs.path }}" ${{ inputs.diff-range }} | tee "${{ inputs.diff-output-file }}")&
+          (./hub-static-analyzer diff --path "${{ inputs.path }}" ${{ inputs.diff-range }} --exclude "${{ inputs.exclude }}" | tee "${{ inputs.diff-output-file }}")&
 
           pids+=($!)
         fi

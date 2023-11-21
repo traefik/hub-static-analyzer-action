@@ -21,11 +21,9 @@
 <br />
 </div>
 
----
-
 # About
 
-This GitHub Action performs static analysis on Traefik Hub Custom Resource Definitions (CRD) manifests. 
+This GitHub Action performs static analysis on Traefik Hub Custom Resource Definitions (CRD) manifests.  
 It allows you to lint the manifests and generate a diff report between commits. 
 <!-- The action is based on [hub-static-analyzer](https://github.com/traefik/hub-static-analyzer), a tool provided by [TraefikLabs](https://traefik.io/). -->
 <!-- Here a link to the upcoming public binary repo -->
@@ -56,31 +54,31 @@ jobs:
         # Version of hub-static-analyzer to use.
         # By default, the latest version available will be used.
         version: "latest"
-        
+
         # Path to the directory containing the manifests to analyze.
         # By default, the current directory will be used.
         path: "path/to/manifests"
-        
+
         ## Linting options:
-        
+
         # Enable linting.
         # By default, "false".
         lint: "true"
-        
+
         # Configure the output format of the linter. One of `unix`, `checkstyle` or `json`.
         # By default, `unix` format will be used.
         lint-format: "unix"
-        
+
         # Path where to store the linting results. The file will be overwritten if it exists.
         # By default, in "traefik-hub-static-analyzer-lint.out".
         lint-output-file: "/path/to/output.lint.out"
-        
+
         ## Diff report options:
-        
+
         # Enable the generation of a diff report.
         # By default, "false".
         diff: "true"
-        
+
         # Range of commits on which to run the analysis.
         # This could be a strict range: 5f6b21d...cff824e
         # Or use relative references: HEAD~3...HEAD~1
@@ -93,12 +91,12 @@ jobs:
         diff-output-file: "/path/to/output.lint.out"
 ```
 
-## Scenarios:
+## Scenarios
 
-- [Lint your manifests and display linting errors in PR](#Lint-your-manifests-and-display-linting-errors-in-PR)
-- [Generate a diff report and displays it in PR](#Generate-a-diff-report-and-displays-it-in-PR)
+- [Lint your manifests and display linting errors in PR](#lint-your-manifests-and-display-linting-errors-in-pr)
+- [Generate a diff report and displays it in PR](#generate-a-diff-report-and-displays-it-in-pr)
 
-# Lint your manifests and display linting errors in PR
+### Lint your manifests and display linting errors in PR
 
 ```yaml
 name: Check Traefik Hub CRDs
@@ -133,10 +131,10 @@ jobs:
             ./output.xml
 ```
 
-Note that if you are running it on a public repository or if you are GitHub enterprise customers, you can leverage SARIF output format
-to [submit a code scanning artifact](https://docs.github.com/en/code-security/code-scanning/integrating-with-code-scanning/uploading-a-sarif-file-to-github)
+> Note that if you are running it on a public repository or if you are GitHub enterprise customers,  
+you can leverage SARIF output format to [submit a code scanning artifact](https://docs.github.com/en/code-security/code-scanning/integrating-with-code-scanning/uploading-a-sarif-file-to-github).
 
-# Generate a diff report and displays it in PR
+### Generate a diff report and displays it in PR
 
 ```yaml
 

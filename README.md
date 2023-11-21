@@ -1,11 +1,36 @@
+<br/>
 
-# Traefik Hub Static Analyzer GitHub Action
+<div align="center" style="margin: 30px;">
+<a href="https://hub.traefik.io/">
+  <img src="https://doc.traefik.io/traefik-hub/assets/images/logos-traefik-hub-horizontal.svg" style="width:250px;" align="center" />
+</a>
+<br />
+<br />
+
+<div align="center">
+    <a href="https://hub.traefik.io">Log In</a> |
+    <a href="https://doc.traefik.io/traefik-hub/">Documentation</a>
+</div>
+</div>
+
+<br />
+
+<div align="center"><strong>Traefik Hub Static Analyzer GitHub Action</strong>
+
+<br />
+<br />
+</div>
+
+---
+
+# About
 
 This GitHub Action performs static analysis on Traefik Hub Custom Resource Definitions (CRD) manifests. 
 It allows you to lint the manifests and generate a diff report between commits. 
-The action is based on [hub-static-analyzer](https://github.com/traefik/hub-static-analyzer), a tool provided by [TraefikLabs](https://traefik.io/).
+<!-- The action is based on [hub-static-analyzer](https://github.com/traefik/hub-static-analyzer), a tool provided by [TraefikLabs](https://traefik.io/). -->
+<!-- Here a link to the upcoming public binary repo -->
 
-## Usage
+## How to use
 
 ```yaml
 name: Traefik Hub Static Analysis
@@ -32,7 +57,7 @@ jobs:
         # By default, the latest version available will be used.
         version: "latest"
         
-        # Path to the directory containing the manifests to analyze. 
+        # Path to the directory containing the manifests to analyze.
         # By default, the current directory will be used.
         path: "path/to/manifests"
         
@@ -42,7 +67,7 @@ jobs:
         # By default, "false".
         lint: "true"
         
-        # Configure the output format of the linter. One of `unix`, `checkstyle` or `json`. 
+        # Configure the output format of the linter. One of `unix`, `checkstyle` or `json`.
         # By default, `unix` format will be used.
         lint-format: "unix"
         
@@ -59,7 +84,7 @@ jobs:
         # Range of commits on which to run the analysis.
         # This could be a strict range: 5f6b21d...cff824e
         # Or use relative references: HEAD~3...HEAD~1
-        # Or simply from a specific commit to HEAD: 5f6b21d
+        # Or from a specific commit to HEAD: 5f6b21d
         # By default, diff with unstaged changes.
         diff-range: "HEAD~1"
 
@@ -110,7 +135,6 @@ jobs:
 
 Note that if you are running it on a public repository or if you are GitHub enterprise customers, you can leverage SARIF output format
 to [submit a code scanning artifact](https://docs.github.com/en/code-security/code-scanning/integrating-with-code-scanning/uploading-a-sarif-file-to-github)
-
 
 # Generate a diff report and displays it in PR
 

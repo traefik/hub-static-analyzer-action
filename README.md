@@ -169,7 +169,7 @@ jobs:
         run: |
           set -u
 
-          echo "# Traefik Hub Report:" > header.md
+          echo "# Traefik Hub Report" > header.md
           echo "" >> header.md
           echo "The following changes have been detected." >> header.md
           echo "" >> header.md

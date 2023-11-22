@@ -28,12 +28,12 @@ It allows you to lint the manifests and generate a diff report between commits.
 <!-- The action is based on [hub-static-analyzer](https://github.com/traefik/hub-static-analyzer), a tool provided by [TraefikLabs](https://traefik.io/). -->
 <!-- Here a link to the upcoming public binary repo -->
 
-## How to use
+<!-- ## How to use
 
 1. Create a new file in your repository `.github/workflows/action.yml`.
-2. Copy-paste the following workflow in your `action.yml` file:
+2. Copy-paste the following workflow in your `action.yml` file: -->
 
-```yaml
+<!-- ```yaml
 name: Traefik Hub Static Analysis
 
 on:
@@ -89,15 +89,114 @@ jobs:
         # By default, diff with unstaged changes.
         diff-range: "HEAD~1"
 
-        # Path where to store the diff report. The file will be overwritten if it exists.
+        # The file will be overwritten if it exists.
         # By default, in "traefik-hub-static-analyzer-diff.out".
         diff-output-file: "/path/to/output.lint.out"
+``` -->
+
+## Configuration
+
+> `lint-output-file` and `diff-output-file` will be overwritten if they exist already.
+
+| Parameter | Description | Default |
+| :-------- | :---------- | :-------|
+| `version` | Version of hub-static-analyzer to use | latest |
+| `path` | Path to the directory containing the manifests to analyze | Current directory |
+| `lint` | Enable linting | true |
+| `lint-format` | The output format of the linter. One of `unix`, `checkstyle` or `json` | unix |
+| `lint-output-file` | Path where to store the linting results. The file will be overwritten if it exists | traefik-hub-static-analyzer-lint.out |
+| `diff` | Enable the generation of a diff report. | true |
+| `diff-range` | Range of commits on which to run the analysis. This could be a strict range: 5f6b21d...cff824e Or use relative references: HEAD~3...HEAD~1 Or from a specific commit to HEAD: 5f6b21d | unstaged changes|
+| `diff-output-file` | The file will be overwritten if it exists. | traefik-hub-static-analyzer-diff.out
+
+## How to use
+
+Mention that this example also uses another action to add the output to the PR.
+
+1. Create a new file in your repository `.github/workflows/action.yml`.
+2. Copy-paste the following workflow in your `action.yml` file:
+
+
+Should the default example  use the default settings or like shown below, the checkstyle format?
+
+```yaml
+name: Traefik Hub Static Analyzer
+
+on:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint Traefik Hub CRDs with hub-static-analyzer
+        uses: traefik/hub-static-analyzer-action@main
+        with:
+          exclude: "apps/overlays/local/*"
+          token: ${{ secrets.GH_TOKEN }}
+          lint: true
+          lint-format: checkstyle
+          lint-output-file: ./output.xml
+
+      - name: Annotate code
+        if: ${{ !cancelled() }}
+        uses: Juuxel/publish-checkstyle-report@v1
+        with:
+          reports: |
+            ./output.xml
+
+  diff:
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Lint Traefik Hub CRDs with hub-static-analyzer
+        uses: traefik/hub-static-analyzer-action@main
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          diff: true
+          diff-range: "origin/${GITHUB_BASE_REF}...origin/${GITHUB_HEAD_REF}"
+          diff-output-file: ./output.md
+
+      - name: Prepare report
+        shell: bash
+        run: |
+          set -u
+
+          echo "# Traefik Hub Report" > header.md
+          echo "" >> header.md
+          echo "The following changes have been detected." >> header.md
+          echo "" >> header.md
+
+      - name: Write report
+        if: ${{ hashFiles('./output.md') != ''}}
+        uses: mshick/add-pr-comment@v2
+        with:
+          message-path: |
+            header.md
+            output.md
 ```
 
 ## Scenarios
 
 - [Lint your manifests and display linting errors in the PR](#lint-your-manifests-and-display-linting-errors-in-the-pr)
-- [Generate a diff report and display it in the PR](#generate-a-diff-report-and-display-it-in-the-pr)
+
+The one above uses checkstyle report as inline code annotations (https://github.com/Juuxel/publish-checkstyle-report)
+
+- [Generate a diff report and display it in the PR](#generate-a-diff-report-and-display-it-in-the-pr) 
+
+This one uses https://github.com/mshick/add-pr-comment to adds a comment to a pull request's issue
 
 ### Lint your manifests and display linting errors in the PR
 

@@ -208,6 +208,8 @@ jobs:
             ./output.xml
 ```
 
+![Image a linting error](./assets/lint-error.png "Image on a linting error")
+
 ### Generate a diff report and display it in the PR
 
 This is an example of how to configure this GitHub action to generate a diff report to show the changes between Git commits.  
@@ -259,8 +261,7 @@ jobs:
             output.md
 ```
 
-> If you run this action in a public repository or if you are a GitHub enterprise customer,  
-you can leverage the SARIF output format to [submit a code scanning artifact](https://docs.github.com/en/code-security/code-scanning/integrating-with-code-scanning/uploading-a-sarif-file-to-github).
+![Image of a diff report](./assets/diff-report.png "Image of a diff report")
 
 ## License
 

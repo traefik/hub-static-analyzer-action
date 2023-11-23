@@ -25,13 +25,11 @@
 
 This GitHub Action performs static analysis on Traefik Hub Custom Resource Definitions (CRD) manifests.  
 It allows you to lint the manifests and generate a diff report between commits. 
-<!-- The action is based on [hub-static-analyzer](https://github.com/traefik/hub-static-analyzer), a tool provided by [TraefikLabs](https://traefik.io/). -->
+
 <!-- Here a link to the upcoming public binary repo -->
 
-<!-- ## How to use
-
-1. Create a new file in your repository `.github/workflows/action.yml`.
-2. Copy-paste the following workflow in your `action.yml` file: -->
+> If you run this action in a public repository or if you are a GitHub Enterprise customer,  
+you can leverage the SARIF output format to [submit a code scanning artifact](https://docs.github.com/en/code-security/code-scanning/integrating-with-code-scanning/uploading-a-sarif-file-to-github).
 
 ## Usage
 
@@ -96,7 +94,7 @@ jobs:
 
 ## Example
 
-The following example shows a fully configured workflow using this action to run two checks.
+The following example shows a fully configured workflow using this action.
 
 ```yaml
 name: Traefik Hub Static Analyzer
@@ -170,11 +168,11 @@ jobs:
 ## Scenarios
 
 1. [Lint your manifests and display linting errors in the PR](#lint-your-manifests-and-display-linting-errors-in-the-pr)
-2. [Generate a diff report and display it in the PR](#generate-a-diff-report-and-display-it-in-the-pr)
+2. [Generate a diff report and add the as comment report to the PR](#generate-a-diff-report-and-display-it-in-the-pr)
 
 ### Lint your manifests and display linting errors in the PR
 
-This is an example of how to configure this GitHub action to lint your manifests in `checkstyle` format.
+This is an example of how to configure this GitHub action to lint your manifests in `checkstyle` format.  
 The [Publish Checkstyle Report Action](https://github.com/Juuxel/publish-checkstyle-report) is used to display the `chweckstyle` errors
 as inline code annotations.
 

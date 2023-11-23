@@ -173,7 +173,7 @@ jobs:
 ### Lint your manifests and display linting errors in the PR
 
 This is an example of how to configure this GitHub action to lint your manifests in `checkstyle` format.  
-The [Publish Checkstyle Report Action](https://github.com/Juuxel/publish-checkstyle-report) is used to display the `chweckstyle` errors
+The [Publish Checkstyle Report Action](https://github.com/Juuxel/publish-checkstyle-report) is used to display the `checkstyle` errors
 as inline code annotations.
 
 ```yaml

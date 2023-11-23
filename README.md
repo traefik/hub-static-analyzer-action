@@ -168,7 +168,7 @@ jobs:
 ## Scenarios
 
 1. [Lint your manifests and display linting errors in the PR](#lint-your-manifests-and-display-linting-errors-in-the-pr)
-2. [Generate a diff report and add the as comment report to the PR](#generate-a-diff-report-and-display-it-in-the-pr)
+2. [Generate a diff report and add the report to the PR](#generate-a-diff-report-and-display-it-in-the-pr)
 
 ### Lint your manifests and display linting errors in the PR
 

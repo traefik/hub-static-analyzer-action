@@ -65,7 +65,6 @@ jobs:
         path: "path/to/manifests"
 
         ## Linting options:
-
         # Enable linting.
         # By default, "false".
         lint: "true"
@@ -79,7 +78,6 @@ jobs:
         lint-output-file: "/path/to/output.lint.out"
 
         ## Diff report options:
-
         # Enable the generation of a diff report.
         # By default, "false".
         diff: "true"

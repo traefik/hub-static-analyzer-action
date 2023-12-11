@@ -9,7 +9,7 @@ inputs:
     required: false
     default: 'latest'
   path:
-    description: 'path to the manifests within a Git repository'
+    description: 'Path to the manifests within a Git repository'
     required: false
     default: "./"
   token:
@@ -17,13 +17,13 @@ inputs:
     required: false
     default: "${{ github.token }}"
   exclude:
-    description: 'exclude the matching manifests'
+    description: 'Exclude the matching manifests'
     required: false
     default: ''
 
   # Lint options.
   lint:
-    description: 'lint manifests. . Default: "false"'
+    description: 'Lint manifests. . Default: "false"'
     required: false
     default: "false"
   lint-output-file:
@@ -31,17 +31,17 @@ inputs:
     required: false
     default: 'traefik-hub-static-analyzer-lint.out'
   lint-format:
-    description: 'format, one of: unix, json, checkstyle'
+    description: 'Format, one of: unix, json, checkstyle'
     required: false
     default: 'unix'
 
   # Diff options.
   diff:
-    description: 'generate a diff report. Default: "false"'
+    description: 'Generate a diff report. Default: "false"'
     required: false
     default: "false"
   diff-range:
-    description: 'range of commits on which to run the diff. E.g. 12345d...12345b, HEAD~3'
+    description: 'Range of commits on which to run the diff. E.g. 12345d...12345b, HEAD~3'
     required: false
   diff-output-file:
     description: 'Filename to store diff output. File will be overwritten if it exists. Default: "traefik-hub-static-analyzer-diff.out"'

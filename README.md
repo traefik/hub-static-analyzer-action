@@ -1,9 +1,35 @@
+<br/>
 
-# Traefik Hub Static Analyzer GitHub Action
+<div align="center" style="margin: 30px;">
+<a href="https://hub.traefik.io/">
+  <img src="https://doc.traefik.io/traefik-hub/assets/images/logos-traefik-hub-horizontal.svg" style="width:250px;" align="center" />
+</a>
+<br />
+<br />
 
-This GitHub Action performs static analysis on Traefik Hub Custom Resource Definitions (CRD) manifests. 
+<div align="center">
+    <a href="https://hub.traefik.io">Log In</a> |
+    <a href="https://doc.traefik.io/traefik-hub/">Documentation</a>
+</div>
+</div>
+
+<br />
+
+<div align="center"><strong>Traefik Hub Static Analyzer GitHub Action</strong>
+
+<br />
+<br />
+</div>
+
+# About
+
+This GitHub Action performs static analysis on Traefik Hub Custom Resource Definitions (CRD) manifests.  
 It allows you to lint the manifests and generate a diff report between commits. 
-The action is based on [hub-static-analyzer](https://github.com/traefik/hub-static-analyzer), a tool provided by [TraefikLabs](https://traefik.io/).
+
+<!-- Here a link to the upcoming public binary repo -->
+
+> If you run this action in a public repository or if you are a GitHub Enterprise customer,  
+you can leverage the SARIF output format to [submit a code scanning artifact](https://docs.github.com/en/code-security/code-scanning/integrating-with-code-scanning/uploading-a-sarif-file-to-github).
 
 ## Usage
 
@@ -31,71 +57,145 @@ jobs:
         # Version of hub-static-analyzer to use.
         # By default, the latest version available will be used.
         version: "latest"
-        
-        # Path to the directory containing the manifests to analyze. 
+
+        # Path to the directory containing the manifests to analyze.
         # By default, the current directory will be used.
         path: "path/to/manifests"
-        
+
         ## Linting options:
-        
         # Enable linting.
         # By default, "false".
         lint: "true"
-        
-        # Configure the output format of the linter. One of `unix`, `checkstyle` or `json`. 
+
+        # Configure the output format of the linter. One of `unix`, `checkstyle` or `json`.
         # By default, `unix` format will be used.
         lint-format: "unix"
-        
+
         # Path where to store the linting results. The file will be overwritten if it exists.
         # By default, in "traefik-hub-static-analyzer-lint.out".
         lint-output-file: "/path/to/output.lint.out"
-        
+
         ## Diff report options:
-        
         # Enable the generation of a diff report.
         # By default, "false".
         diff: "true"
-        
+
         # Range of commits on which to run the analysis.
         # This could be a strict range: 5f6b21d...cff824e
         # Or use relative references: HEAD~3...HEAD~1
-        # Or simply from a specific commit to HEAD: 5f6b21d
+        # Or from a specific commit to HEAD: 5f6b21d
         # By default, diff with unstaged changes.
         diff-range: "HEAD~1"
 
-        # Path where to store the diff report. The file will be overwritten if it exists.
+        # The file will be overwritten if it exists.
         # By default, in "traefik-hub-static-analyzer-diff.out".
         diff-output-file: "/path/to/output.lint.out"
 ```
 
-## Scenarios:
+## Example
 
-- [Lint your manifests and display linting errors in PR](#Lint-your-manifests-and-display-linting-errors-in-PR)
-- [Generate a diff report and displays it in PR](#Generate-a-diff-report-and-displays-it-in-PR)
-
-# Lint your manifests and display linting errors in PR
+The following example shows a fully configured workflow using this action.
 
 ```yaml
-name: Check Traefik Hub CRDs
+name: Traefik Hub Static Analyzer
 
 on:
-  push:
-    branches: [ main, master ]
   pull_request:
 
-permissions:
-  checks: write
-  contents: write
-
 jobs:
-  scan:
+  lint:
     runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
       - name: Lint Traefik Hub CRDs with hub-static-analyzer
         uses: traefik/hub-static-analyzer-action@main
         with:
+          exclude: "apps/overlays/local/*"
+          token: ${{ secrets.GH_TOKEN }}
+          lint: true
+          lint-format: checkstyle
+          lint-output-file: ./output.xml
+
+      - name: Annotate code
+        if: ${{ !cancelled() }}
+        uses: Juuxel/publish-checkstyle-report@v1
+        with:
+          reports: |
+            ./output.xml
+
+  diff:
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Lint Traefik Hub CRDs with hub-static-analyzer
+        uses: traefik/hub-static-analyzer-action@main
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          diff: true
+          diff-range: "origin/${GITHUB_BASE_REF}...origin/${GITHUB_HEAD_REF}"
+          diff-output-file: ./output.md
+
+      - name: Prepare report
+        shell: bash
+        run: |
+          set -u
+
+          echo "# Traefik Hub Report" > header.md
+          echo "" >> header.md
+          echo "The following changes have been detected." >> header.md
+          echo "" >> header.md
+
+      - name: Write report
+        if: ${{ hashFiles('./output.md') != ''}}
+        uses: mshick/add-pr-comment@v2
+        with:
+          message-path: |
+            header.md
+            output.md
+```
+
+## Scenarios
+
+1. [Lint your manifests and display linting errors in the PR](#lint-your-manifests-and-display-linting-errors-in-the-pr)
+2. [Generate a diff report and add the report to the PR](#generate-a-diff-report-and-display-it-in-the-pr)
+
+### Lint your manifests and display linting errors in the PR
+
+This is an example of how to configure this GitHub action to lint your manifests in `checkstyle` format.  
+The [Publish Checkstyle Report Action](https://github.com/Juuxel/publish-checkstyle-report) is used to display the `checkstyle` errors
+as inline code annotations.
+
+```yaml
+name: Traefik Hub Static Analyzer
+
+on:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint Traefik Hub CRDs with hub-static-analyzer
+        uses: traefik/hub-static-analyzer-action@main
+        with:
+          exclude: "apps/overlays/local/*"
+          token: ${{ secrets.GITHUB_TOKEN }}
           lint: true
           lint-format: checkstyle
           lint-output-file: ./output.xml
@@ -108,12 +208,61 @@ jobs:
             ./output.xml
 ```
 
-Note that if you are running it on a public repository or if you are GitHub enterprise customers, you can leverage SARIF output format
-to [submit a code scanning artifact](https://docs.github.com/en/code-security/code-scanning/integrating-with-code-scanning/uploading-a-sarif-file-to-github)
+![Image a linting error](./assets/lint-error.png "Image on a linting error")
 
+### Generate a diff report and display it in the PR
 
-# Generate a diff report and displays it in PR
+This is an example of how to configure this GitHub action to generate a diff report to show the changes between Git commits.  
+The [add-pr-comment action](https://github.com/mshick/add-pr-comment "Link to https://github.com/mshick/add-pr-comment") is used to
+add the report as a comment to the PR.
 
 ```yaml
+name: Traefik Hub Static Analyzer
 
+on:
+  pull_request:
+
+jobs:
+  diff:
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Lint Traefik Hub CRDs with hub-static-analyzer
+        uses: traefik/hub-static-analyzer-action@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          diff: true
+          diff-range: "origin/${GITHUB_BASE_REF}...origin/${GITHUB_HEAD_REF}"
+          diff-output-file: ./output.md
+
+      - name: Prepare report
+        shell: bash
+        run: |
+          set -u
+
+          echo "# Traefik Hub Report" > header.md
+          echo "" >> header.md
+          echo "The following changes have been detected." >> header.md
+          echo "" >> header.md
+
+      - name: Write report
+        if: ${{ hashFiles('./output.md') != ''}}
+        uses: mshick/add-pr-comment@v2
+        with:
+          message-path: |
+            header.md
+            output.md
 ```
+
+![Image of a diff report](./assets/diff-report.png "Image of a diff report")
+
+## License
+
+The content in this repository is licensed under the [Apache 2 License](https://www.apache.org/licenses/LICENSE-2.0 "Link to Apache 2 license").

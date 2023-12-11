@@ -237,7 +237,7 @@ jobs:
       - name: Lint Traefik Hub CRDs with hub-static-analyzer
         uses: traefik/hub-static-analyzer-action@main
         with:
-          token: ${{ secrets.GH_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           diff: true
           diff-range: "origin/${GITHUB_BASE_REF}...origin/${GITHUB_HEAD_REF}"
           diff-output-file: ./output.md

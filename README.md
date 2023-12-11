@@ -195,7 +195,7 @@ jobs:
         uses: traefik/hub-static-analyzer-action@main
         with:
           exclude: "apps/overlays/local/*"
-          token: ${{ secrets.GH_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           lint: true
           lint-format: checkstyle
           lint-output-file: ./output.xml

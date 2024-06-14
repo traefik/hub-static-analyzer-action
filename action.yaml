@@ -80,8 +80,6 @@ runs:
           gh release download --repo "${REPOSITORY}" --pattern "${PATTERN}" --output "${TARGET}"
         fi
 
-        echo "Downloading asset ${ASSET_ID}..."
-
         tar -xf "$TARGET" --strip-components 1
     - name: Run Static Analysis
       shell: bash

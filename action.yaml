@@ -55,24 +55,8 @@ runs:
       run: |
         set -u
 
-        RELEASE_URL='https://api.github.com/repos/traefik/hub-static-analyzer/releases/latest'
-        if [[ "${{ inputs.version }}" != "latest" ]]; then
-          RELEASE_URL='https://api.github.com/repos/traefik/hub-static-analyzer/releases/tags/${{ inputs.version }}'
-        fi
-
-        RELEASE_INFO="$(curl --silent --show-error --fail \
-          --header 'Authorization: Bearer ${{ inputs.token }}' \
-          --header 'Cache-Control: no-cache, must-revalidate' \
-          "${RELEASE_URL}")"
-
-        RELEASE_NAME="$(echo "${RELEASE_INFO}" | jq --raw-output ".name")"
-
         if [ ${{ runner.arch }} = "ARM64" ]; then
           RELEASE_ARCH="arm64"
-        elif [ ${{ runner.arch }} = "ARM" ]; then
-          RELEASE_ARCH="arm"
-        elif [ ${{ runner.arch }} = "X86" ]; then
-          RELEASE_ARCH="386"
         elif [ ${{ runner.arch }} = "X64" ]; then
           RELEASE_ARCH="amd64"
         else
@@ -87,26 +71,18 @@ runs:
           RELEASE_OS="linux"
         fi
 
-        echo "Preparing to download hub-static-analyzer (Version=${RELEASE_NAME}, OS=${RELEASE_OS}, Arch=${RELEASE_ARCH})"
-
-        ASSET_ID="$(echo "${RELEASE_INFO}" \
-          | jq --raw-output ".assets[] | select(.name | test(\"${RELEASE_OS}-${RELEASE_ARCH}.tar.gz\")) | .id")"
+        PATTERN="static-analyzer-*${RELEASE_OS}-${RELEASE_ARCH}*"
+        REPOSITORY='mloiseleur/hub'
+        TARGET="hub-static-analyzer.tar.gz"
+        if [[ "${{ inputs.version }}" != "latest" ]]; then
+          gh release download --repo "${REPOSITORY}" --pattern "${PATTERN}" "${{ inputs.version }}" --output "${TARGET}"
+        else
+          gh release download --repo "${REPOSITORY}" --pattern "${PATTERN}" --output "${TARGET}"
+        fi
 
         echo "Downloading asset ${ASSET_ID}..."
 
-        TARGET="hub-static-analyzer-${RELEASE_NAME}.tar.gz"
-
-        # Skip downloading release if already downloaded.
-        if [[ ! -e "$TARGET" ]]; then
-          curl --silent --show-error --fail \
-            --header 'Accept: application/octet-stream' \
-            --header 'Authorization: Bearer ${{ inputs.token }}' \
-            --header 'X-GitHub-Api-Version: 2022-11-28' \
-            --location --output "${TARGET}" \
-            "https://api.github.com/repos/traefik/hub-static-analyzer/releases/assets/${ASSET_ID}"
-
-          tar -xf "$TARGET" --strip-components 1
-        fi
+        tar -xf "$TARGET" --strip-components 1
     - name: Run Static Analysis
       shell: bash
       run: |

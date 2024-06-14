@@ -71,7 +71,7 @@ runs:
           RELEASE_OS="linux"
         fi
 
-        PATTERN="static-analyzer-*${RELEASE_OS}-${RELEASE_ARCH}*"
+        PATTERN="static-analyzer-*-${RELEASE_OS}-${RELEASE_ARCH}*"
         REPOSITORY='mloiseleur/hub'
         TARGET="hub-static-analyzer.tar.gz"
         if [[ "${{ inputs.version }}" != "latest" ]]; then

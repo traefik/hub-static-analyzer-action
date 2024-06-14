@@ -72,7 +72,7 @@ runs:
         fi
 
         PATTERN="static-analyzer-*-${RELEASE_OS}-${RELEASE_ARCH}*"
-        REPOSITORY='mloiseleur/hub'
+        REPOSITORY='traefik/hub'
         TARGET="hub-static-analyzer.tar.gz"
         if [[ "${{ inputs.version }}" != "latest" ]]; then
           gh release download --repo "${REPOSITORY}" --pattern "${PATTERN}" --output "${TARGET}" "${{ inputs.version }}"

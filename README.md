@@ -55,7 +55,8 @@ jobs:
       uses: traefik/hub-static-analyzer-action:latest
       with:
         # Version of hub-static-analyzer to use.
-        # By default, the latest version available will be used.
+        # It needs to use complete release name, like "static-analyzer-v1.0.0"
+        # By default, the latest supported version will be used.
         version: "latest"
 
         # Path to the directory containing the manifests to analyze.

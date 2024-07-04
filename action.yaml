@@ -77,7 +77,7 @@ runs:
         if [[ "${{ inputs.version }}" != "latest" ]]; then
           gh release download --repo "${REPOSITORY}" --pattern "${PATTERN}" --output "${TARGET}" "${{ inputs.version }}"
         else
-          gh release download --repo "${REPOSITORY}" --pattern "${PATTERN}" --output "${TARGET}"
+          gh release download --repo "${REPOSITORY}" --pattern "${PATTERN}" --output "${TARGET}" "static-analyzer-v1.0.0"
         fi
 
         tar -xf "$TARGET" --strip-components 1

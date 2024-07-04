@@ -95,7 +95,7 @@ jobs:
 
 ## Example
 
-The following example shows a fully configured workflow using this action.
+The following example shows a fully configured workflow using this action and git hub token set in GH_TOKEN secret variable.
 
 ```yaml
 name: Traefik Hub Static Analyzer
@@ -162,6 +162,8 @@ jobs:
       - name: Write report
         if: ${{ hashFiles('./output.md') != ''}}
         uses: mshick/add-pr-comment@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           message-path: |
             header.md

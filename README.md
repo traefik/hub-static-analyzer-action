@@ -113,9 +113,10 @@ jobs:
 
       - name: Lint Traefik Hub CRDs with hub-static-analyzer
         uses: traefik/hub-static-analyzer-action@main
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           exclude: "apps/overlays/local/*"
-          token: ${{ secrets.GH_TOKEN }}
           lint: true
           lint-format: checkstyle
           lint-output-file: ./output.xml
@@ -140,8 +141,9 @@ jobs:
 
       - name: Lint Traefik Hub CRDs with hub-static-analyzer
         uses: traefik/hub-static-analyzer-action@main
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
-          token: ${{ secrets.GH_TOKEN }}
           diff: true
           diff-range: "origin/${GITHUB_BASE_REF}...origin/${GITHUB_HEAD_REF}"
           diff-output-file: ./output.md
@@ -193,9 +195,10 @@ jobs:
 
       - name: Lint Traefik Hub CRDs with hub-static-analyzer
         uses: traefik/hub-static-analyzer-action@main
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           exclude: "apps/overlays/local/*"
-          token: ${{ secrets.GITHUB_TOKEN }}
           lint: true
           lint-format: checkstyle
           lint-output-file: ./output.xml
@@ -236,8 +239,9 @@ jobs:
 
       - name: Lint Traefik Hub CRDs with hub-static-analyzer
         uses: traefik/hub-static-analyzer-action@main
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           diff: true
           diff-range: "origin/${GITHUB_BASE_REF}...origin/${GITHUB_HEAD_REF}"
           diff-output-file: ./output.md

@@ -112,7 +112,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Lint Traefik Hub CRDs with hub-static-analyzer
+      - name: Lint Traefik Hub CRs with hub-static-analyzer
         uses: traefik/hub-static-analyzer-action@main
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -140,13 +140,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Lint Traefik Hub CRDs with hub-static-analyzer
+      - name: Diff Traefik Hub CRs with hub-static-analyzer
         uses: traefik/hub-static-analyzer-action@main
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           diff: true
-          diff-range: "origin/${GITHUB_BASE_REF}...origin/${GITHUB_HEAD_REF}"
+          diff-range: "origin/${{ github.base_ref }}...pull/${ github.ref_name }}"
           diff-output-file: ./output.md
 
       - name: Prepare report

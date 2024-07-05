@@ -55,7 +55,6 @@ jobs:
       uses: traefik/hub-static-analyzer-action:latest
       with:
         # Version of hub-static-analyzer to use.
-        # It needs to use complete release name, like "static-analyzer-v1.0.0"
         # By default, the latest supported version will be used.
         version: "latest"
 

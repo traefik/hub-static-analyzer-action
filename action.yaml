@@ -70,10 +70,10 @@ runs:
         PATTERN="static-analyzer-*-${RELEASE_OS}-${RELEASE_ARCH}*"
         REPOSITORY='traefik/hub'
         TARGET="hub-static-analyzer.tar.gz"
-        if [[ "${{ inputs.version }}" != "latest" ]]; then
-          gh release download --repo "${REPOSITORY}" --pattern "${PATTERN}" --output "${TARGET}" "${{ inputs.version }}"
-        else
+        if [[ "${{ inputs.version }}" == "latest" ]]; then
           gh release download --repo "${REPOSITORY}" --pattern "${PATTERN}" --output "${TARGET}" "static-analyzer-v1.0.0"
+        else
+          gh release download --repo "${REPOSITORY}" --pattern "${PATTERN}" --output "${TARGET}" "static-analyzer-${{ inputs.version }}"
         fi
 
         tar -xf "$TARGET" --strip-components 1

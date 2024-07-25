@@ -95,7 +95,7 @@ runs:
           echo $disabledRules
           cliRules=""
           for r in "${disabledRules[@]}"; do
-            cliRules+="--rule.${r}=false"
+            cliRules+="--rule.${r}=false "
           done
           echo \$ hub-static-analyzer lint $cliRules --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --exclude "${{ inputs.exclude }}"
           (./hub-static-analyzer lint $cliRules --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --exclude "${{ inputs.exclude }}" > "${{ inputs.lint-output-file }}")&

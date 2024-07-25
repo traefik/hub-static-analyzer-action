@@ -30,7 +30,7 @@ inputs:
     required: false
     default: 'unix'
   lint-disabled-rules:
-    description: "Rules to disable"
+    description: 'Rules to disable'
     required: false
     default: ''
 

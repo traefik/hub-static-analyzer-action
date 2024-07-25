@@ -106,7 +106,7 @@ runs:
         [ -s ${{ inputs.lint-output-file }} ] || rm -f ${{ inputs.lint-output-file }}
         [ -s ${{ inputs.diff-output-file }} ] || rm -f ${{ inputs.diff-output-file }}
 
-        echo "Statuses ${statuses}"
+        # echo "Statuses ${statuses}"
 
         for st in ${statuses[@]}; do
           if [[ ${st} -ne 0 ]]; then

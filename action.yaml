@@ -48,6 +48,7 @@ runs:
     - name: download hub-static-analyzer
       shell: bash
       run: |
+        # Download hub-static-analyzer
         echo "Start download of hub-static-analyzer"
         set -u
 
@@ -80,6 +81,7 @@ runs:
     - name: run static analysis
       shell: bash
       run: |
+        # hub-static-analyzer
         set -u
         set +e
 

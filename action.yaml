@@ -12,15 +12,10 @@ inputs:
     description: 'Path to the manifests within a Git repository'
     required: false
     default: "./"
-  token:
-    description: 'GitHub token'
-    required: false
-    default: "${{ github.token }}"
   exclude:
     description: 'Exclude the matching manifests'
     required: false
     default: ''
-
   # Lint options.
   lint:
     description: 'Lint manifests. . Default: "false"'
@@ -50,9 +45,10 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Download hub-static-analyzer
+    - name: download hub-static-analyzer
       shell: bash
       run: |
+        echo "Start download of hub-static-analyzer"
         set -u
 
         if [ ${{ runner.arch }} = "ARM64" ]; then
@@ -74,27 +70,28 @@ runs:
         PATTERN="static-analyzer-*-${RELEASE_OS}-${RELEASE_ARCH}*"
         REPOSITORY='traefik/hub'
         TARGET="hub-static-analyzer.tar.gz"
-        if [[ "${{ inputs.version }}" != "latest" ]]; then
-          gh release download --repo "${REPOSITORY}" --pattern "${PATTERN}" --output "${TARGET}" "${{ inputs.version }}"
+        if [[ "${{ inputs.version }}" == "latest" ]]; then
+          gh release download --repo "${REPOSITORY}" --pattern "${PATTERN}" --output "${TARGET}" "static-analyzer-v1.0.0"
         else
-          gh release download --repo "${REPOSITORY}" --pattern "${PATTERN}" --output "${TARGET}"
+          gh release download --repo "${REPOSITORY}" --pattern "${PATTERN}" --output "${TARGET}" "static-analyzer-${{ inputs.version }}"
         fi
 
         tar -xf "$TARGET" --strip-components 1
-    - name: Run Static Analysis
+    - name: run static analysis
       shell: bash
       run: |
         set -u
         set +e
 
         if [ ${{ inputs.lint }} = "true" ]; then
-          echo "linting..."
-          (./hub-static-analyzer lint --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --exclude "${{ inputs.exclude }}" | tee "${{ inputs.lint-output-file }}")&
+          echo "Start lint..."
+          (./hub-static-analyzer lint --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --exclude "${{ inputs.exclude }}" > "${{ inputs.lint-output-file }}")&
 
           pids+=($!)
         fi
 
         if [ ${{ inputs.diff }} = "true" ]; then
+          echo "Start diff..."
           (./hub-static-analyzer diff --path "${{ inputs.path }}" ${{ inputs.diff-range }} --exclude "${{ inputs.exclude }}" | tee "${{ inputs.diff-output-file }}")&
 
           pids+=($!)
@@ -113,6 +110,7 @@ runs:
 
         for st in ${statuses[@]}; do
           if [[ ${st} -ne 0 ]]; then
+            echo "Found errors in this PR"
             exit 1
           fi
         done

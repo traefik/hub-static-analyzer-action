@@ -29,6 +29,10 @@ inputs:
     description: 'Format, one of: unix, json, checkstyle'
     required: false
     default: 'unix'
+  lint-disabled-rules:
+    description: "Rules to disable"
+    required: false
+    default: ''
 
   # Diff options.
   diff:
@@ -84,9 +88,15 @@ runs:
         set -u
         set +e
 
-        if [ ${{ inputs.lint }} = "true" ]; then
-          echo \$ hub-static-analyzer lint --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --exclude "${{ inputs.exclude }}"
-          (./hub-static-analyzer lint --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --exclude "${{ inputs.exclude }}" > "${{ inputs.lint-output-file }}")&
+        if [ "${{ inputs.lint }}" = "true" ]; then
+          rules=""
+          echo "x${{ lint-disabled-rules }}"
+          if [ "x${{ lint-disabled-rules }}" != "x" ] ; then
+            rules+="--rule.duplicate=false "
+          fi
+          echo $rules
+          echo \$ hub-static-analyzer lint --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --exclude "${{ inputs.exclude }}" $rules
+          (./hub-static-analyzer lint --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --exclude "${{ inputs.exclude }}" $rules > "${{ inputs.lint-output-file }}")&
 
           pids+=($!)
         fi

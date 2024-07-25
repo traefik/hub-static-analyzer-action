@@ -90,8 +90,8 @@ runs:
 
         if [ "${{ inputs.lint }}" = "true" ]; then
           rules=""
-          echo "x${{ lint-disabled-rules }}"
-          if [ "x${{ lint-disabled-rules }}" != "x" ] ; then
+          echo "x${{ inputs.lint-disabled-rules }}"
+          if [ "x${{ inputs.lint-disabled-rules }}" != "x" ] ; then
             rules+="--rule.duplicate=false "
           fi
           echo $rules

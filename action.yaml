@@ -92,11 +92,11 @@ runs:
           rules=""
           echo "x${{ inputs.lint-disabled-rules }}"
           if [ "x${{ inputs.lint-disabled-rules }}" != "x" ] ; then
-            rules+="--rule.duplicate=false "
+            rules+="--rule.reference=false "
           fi
           echo $rules
-          echo \$ hub-static-analyzer lint --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --exclude "${{ inputs.exclude }}" $rules
-          (./hub-static-analyzer lint --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --exclude "${{ inputs.exclude }}" $rules > "${{ inputs.lint-output-file }}")&
+          echo \$ hub-static-analyzer lint $rules --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --exclude "${{ inputs.exclude }}"
+          (./hub-static-analyzer lint $rules --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --exclude "${{ inputs.exclude }}" > "${{ inputs.lint-output-file }}")&
 
           pids+=($!)
         fi

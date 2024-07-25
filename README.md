@@ -151,6 +151,7 @@ jobs:
       - name: Prepare report
         shell: bash
         run: |
+          # Prepare report
           set -u
 
           echo "# Traefik Hub Report" > header.md

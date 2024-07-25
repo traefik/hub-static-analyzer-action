@@ -50,7 +50,6 @@ runs:
       run: |
         # Download hub-static-analyzer
         set -u
-        echo "Start download of hub-static-analyzer"
 
         if [ ${{ runner.arch }} = "ARM64" ]; then
           RELEASE_ARCH="arm64"
@@ -78,7 +77,6 @@ runs:
         fi
 
         tar -xf "$TARGET" --strip-components 1
-        echo "Done"
     - name: run static analysis
       shell: bash
       run: |
@@ -87,14 +85,14 @@ runs:
         set +e
 
         if [ ${{ inputs.lint }} = "true" ]; then
-          echo "Start lint..."
+          echo hub-static-analyzer lint --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --exclude "${{ inputs.exclude }}"
           (./hub-static-analyzer lint --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --exclude "${{ inputs.exclude }}" > "${{ inputs.lint-output-file }}")&
 
           pids+=($!)
         fi
 
         if [ ${{ inputs.diff }} = "true" ]; then
-          echo "Start diff..."
+          echo hub-static-analyzer diff --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --exclude "${{ inputs.exclude }}"
           (./hub-static-analyzer diff --path "${{ inputs.path }}" ${{ inputs.diff-range }} --exclude "${{ inputs.exclude }}" | tee "${{ inputs.diff-output-file }}")&
 
           pids+=($!)
@@ -117,4 +115,3 @@ runs:
             exit 1
           fi
         done
-        echo "Done"

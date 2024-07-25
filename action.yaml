@@ -49,8 +49,8 @@ runs:
       shell: bash
       run: |
         # Download hub-static-analyzer
-        echo "Start download of hub-static-analyzer"
         set -u
+        echo "Start download of hub-static-analyzer"
 
         if [ ${{ runner.arch }} = "ARM64" ]; then
           RELEASE_ARCH="arm64"
@@ -78,6 +78,7 @@ runs:
         fi
 
         tar -xf "$TARGET" --strip-components 1
+        echo "Done"
     - name: run static analysis
       shell: bash
       run: |
@@ -116,3 +117,4 @@ runs:
             exit 1
           fi
         done
+        echo "Done"

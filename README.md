@@ -23,7 +23,7 @@
 
 # About
 
-This GitHub Action performs static analysis on Traefik Hub Custom Resource Definitions (CRD) manifests.
+This GitHub Action performs static analysis on Traefik Hub Custom Resource Definitions (CRD) manifests.  
 It allows you to lint the manifests and generate a diff report between commits.
 
 <!-- Here a link to the upcoming public binary repo -->
@@ -180,7 +180,7 @@ jobs:
 
 ### Lint your manifests and display linting errors in the PR
 
-This is an example of how to configure this GitHub action to lint your manifests in `checkstyle` format.
+This is an example of how to configure this GitHub action to lint your manifests in `checkstyle` format.  
 The [Publish Checkstyle Report Action](https://github.com/Juuxel/publish-checkstyle-report) is used to display the `checkstyle` errors
 as inline code annotations.
 
@@ -221,9 +221,8 @@ jobs:
 
 ### Generate a diff report and display it in the PR
 
-This is an example of how to configure this GitHub action to generate a diff report to show the changes between Git commits.
-The [add-pr-comment action](https://github.com/mshick/add-pr-comment "Link to https://github.com/mshick/add-pr-comment") is used to
-add the report as a comment to the PR.
+This is an example of how to configure this GitHub action to generate a diff report to show the changes between Git commits.  
+The [add-pr-comment action](https://github.com/mshick/add-pr-comment "Link to https://github.com/mshick/add-pr-comment") is used to add the report as a comment to the PR.
 
 ```yaml
 name: Traefik Hub Static Analyzer

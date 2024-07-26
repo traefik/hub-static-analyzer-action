@@ -29,6 +29,10 @@ inputs:
     description: 'Format, one of: unix, json, checkstyle'
     required: false
     default: 'unix'
+  lint-disabled-rules:
+    description: 'Comma-separated list of Rules to disable'
+    required: false
+    default: ''
 
   # Diff options.
   diff:
@@ -48,7 +52,7 @@ runs:
     - name: download hub-static-analyzer
       shell: bash
       run: |
-        echo "Start download of hub-static-analyzer"
+        # Download hub-static-analyzer
         set -u
 
         if [ ${{ runner.arch }} = "ARM64" ]; then
@@ -71,27 +75,34 @@ runs:
         REPOSITORY='traefik/hub'
         TARGET="hub-static-analyzer.tar.gz"
         if [[ "${{ inputs.version }}" == "latest" ]]; then
-          gh release download --repo "${REPOSITORY}" --pattern "${PATTERN}" --output "${TARGET}" "static-analyzer-v1.0.0"
+          gh release download --repo "${REPOSITORY}" --pattern "${PATTERN}" --output "${TARGET}" "static-analyzer-v1.0.0" > /dev/null
         else
-          gh release download --repo "${REPOSITORY}" --pattern "${PATTERN}" --output "${TARGET}" "static-analyzer-${{ inputs.version }}"
+          gh release download --repo "${REPOSITORY}" --pattern "${PATTERN}" --output "${TARGET}" "static-analyzer-${{ inputs.version }}" > /dev/null
         fi
 
         tar -xf "$TARGET" --strip-components 1
     - name: run static analysis
       shell: bash
       run: |
+        # hub-static-analyzer
         set -u
         set +e
 
-        if [ ${{ inputs.lint }} = "true" ]; then
-          echo "Start lint..."
-          (./hub-static-analyzer lint --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --exclude "${{ inputs.exclude }}" > "${{ inputs.lint-output-file }}")&
+        if [ "${{ inputs.lint }}" = "true" ]; then
+          rules="${{ inputs.lint-disabled-rules }}"
+          disabledRules=(${rules//,/ })
+          cliRules=""
+          for r in "${disabledRules[@]}"; do
+            cliRules+="--rule.${r}=false "
+          done
+          echo \$ hub-static-analyzer lint $cliRules --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --exclude "${{ inputs.exclude }}"
+          (./hub-static-analyzer lint $cliRules --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --exclude "${{ inputs.exclude }}" > "${{ inputs.lint-output-file }}")&
 
           pids+=($!)
         fi
 
         if [ ${{ inputs.diff }} = "true" ]; then
-          echo "Start diff..."
+          echo \$ hub-static-analyzer diff --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --exclude "${{ inputs.exclude }}"
           (./hub-static-analyzer diff --path "${{ inputs.path }}" ${{ inputs.diff-range }} --exclude "${{ inputs.exclude }}" | tee "${{ inputs.diff-output-file }}")&
 
           pids+=($!)
@@ -106,7 +117,7 @@ runs:
         [ -s ${{ inputs.lint-output-file }} ] || rm -f ${{ inputs.lint-output-file }}
         [ -s ${{ inputs.diff-output-file }} ] || rm -f ${{ inputs.diff-output-file }}
 
-        echo "Statuses ${statuses}"
+        # echo "Statuses ${statuses}"
 
         for st in ${statuses[@]}; do
           if [[ ${st} -ne 0 ]]; then

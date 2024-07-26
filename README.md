@@ -24,11 +24,11 @@
 # About
 
 This GitHub Action performs static analysis on Traefik Hub Custom Resource Definitions (CRD) manifests.  
-It allows you to lint the manifests and generate a diff report between commits. 
+It allows you to lint the manifests and generate a diff report between commits.
 
 <!-- Here a link to the upcoming public binary repo -->
 
-> If you run this action in a public repository or if you are a GitHub Enterprise customer,  
+> If you run this action in a public repository or if you are a GitHub Enterprise customer,
 you can leverage the SARIF output format to [submit a code scanning artifact](https://docs.github.com/en/code-security/code-scanning/integrating-with-code-scanning/uploading-a-sarif-file-to-github).
 
 ## Usage
@@ -74,6 +74,9 @@ jobs:
         # Path where to store the linting results. The file will be overwritten if it exists.
         # By default, in "traefik-hub-static-analyzer-lint.out".
         lint-output-file: "/path/to/output.lint.out"
+
+        # Comma-separated list of rules to disable.
+        lint-disabled-rules: ""
 
         ## Diff report options:
         # Enable the generation of a diff report.
@@ -151,6 +154,7 @@ jobs:
       - name: Prepare report
         shell: bash
         run: |
+          # Prepare report
           set -u
 
           echo "# Traefik Hub Report" > header.md
@@ -218,8 +222,7 @@ jobs:
 ### Generate a diff report and display it in the PR
 
 This is an example of how to configure this GitHub action to generate a diff report to show the changes between Git commits.  
-The [add-pr-comment action](https://github.com/mshick/add-pr-comment "Link to https://github.com/mshick/add-pr-comment") is used to
-add the report as a comment to the PR.
+The [add-pr-comment action](https://github.com/mshick/add-pr-comment "Link to https://github.com/mshick/add-pr-comment") is used to add the report as a comment to the PR.
 
 ```yaml
 name: Traefik Hub Static Analyzer

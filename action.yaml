@@ -30,7 +30,7 @@ inputs:
     required: false
     default: 'unix'
   lint-disabled-rules:
-    description: 'Rules to disable'
+    description: 'Comma-separated list of Rules to disable'
     required: false
     default: ''
 
@@ -90,9 +90,7 @@ runs:
 
         if [ "${{ inputs.lint }}" = "true" ]; then
           rules="${{ inputs.lint-disabled-rules }}"
-          echo $rules
           disabledRules=(${rules//,/ })
-          echo $disabledRules
           cliRules=""
           for r in "${disabledRules[@]}"; do
             cliRules+="--rule.${r}=false "

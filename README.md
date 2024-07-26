@@ -52,7 +52,9 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Run Traefik Hub Static Analyzer
-      uses: traefik/hub-static-analyzer-action:latest
+      uses: traefik/hub-static-analyzer-action@main
+      env:
+        GH_TOKEN: # <== Required GitHub Token here.
       with:
         # Version of hub-static-analyzer to use.
         # By default, the latest supported version will be used.
@@ -97,7 +99,7 @@ jobs:
 
 ## Example
 
-The following example shows a fully configured workflow using this action and git hub token set in GH_TOKEN secret variable.
+The following example shows a fully configured workflow using this action and git hub token set in GH_TOKEN secret variable. The token is required to download public release of _hub-static-analyzer_ with `gh` cli, see [here](https://github.com/cli/cli/discussions/3820).
 
 ```yaml
 name: Traefik Hub Static Analyzer

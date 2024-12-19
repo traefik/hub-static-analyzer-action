@@ -150,7 +150,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           diff: true
-          diff-range: "origin/${{ github.base_ref }}...pull/${ github.ref_name }}"
+          diff-range: "origin/${{ github.base_ref }}...pull/${{ github.ref_name }}"
           diff-output-file: ./output.md
 
       - name: Prepare report

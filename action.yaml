@@ -75,7 +75,7 @@ runs:
         REPOSITORY='traefik/hub'
         TARGET="hub-static-analyzer.tar.gz"
         if [[ "${{ inputs.version }}" == "latest" ]]; then
-          gh release download --repo "${REPOSITORY}" --pattern "${PATTERN}" --output "${TARGET}" "static-analyzer-v1.6.0" > /dev/null
+          gh release download --repo "${REPOSITORY}" --pattern "${PATTERN}" --output "${TARGET}" "static-analyzer-v1.7.0" > /dev/null
         else
           gh release download --repo "${REPOSITORY}" --pattern "${PATTERN}" --output "${TARGET}" "static-analyzer-${{ inputs.version }}" > /dev/null
         fi

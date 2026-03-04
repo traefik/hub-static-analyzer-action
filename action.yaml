@@ -12,13 +12,17 @@ inputs:
     description: 'Path to the manifests within a Git repository'
     required: false
     default: "./"
+  include:
+    description: 'Only include the matching manifests'
+    required: false
+    default: ''
   exclude:
     description: 'Exclude the matching manifests'
     required: false
     default: ''
   # Lint options.
   lint:
-    description: 'Lint manifests. . Default: "false"'
+    description: 'Lint manifests. Default: "false"'
     required: false
     default: "false"
   lint-output-file:
@@ -26,9 +30,13 @@ inputs:
     required: false
     default: 'traefik-hub-static-analyzer-lint.out'
   lint-format:
-    description: 'Format, one of: unix, json, checkstyle'
+    description: 'Format, one of: unix, json, checkstyle, sarif'
     required: false
     default: 'unix'
+  lint-offline:
+    description: 'Enable offline mode for additional validation checks. Default: "false"'
+    required: false
+    default: "false"
   lint-disabled-rules:
     description: 'Comma-separated list of Rules to disable'
     required: false
@@ -88,6 +96,19 @@ runs:
         set -u
         set +e
 
+        pids=()
+        statuses=()
+
+        includeArgs=()
+        if [ -n "${{ inputs.include }}" ]; then
+          includeArgs=(--include "${{ inputs.include }}")
+        fi
+
+        excludeArgs=()
+        if [ -n "${{ inputs.exclude }}" ]; then
+          excludeArgs=(--exclude "${{ inputs.exclude }}")
+        fi
+
         if [ "${{ inputs.lint }}" = "true" ]; then
           rules="${{ inputs.lint-disabled-rules }}"
           disabledRules=(${rules//,/ })
@@ -95,15 +116,19 @@ runs:
           for r in "${disabledRules[@]}"; do
             cliRules+="--rule.${r}=false "
           done
-          echo \$ hub-static-analyzer lint $cliRules --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --exclude "${{ inputs.exclude }}"
-          (./hub-static-analyzer lint $cliRules --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --exclude "${{ inputs.exclude }}" > "${{ inputs.lint-output-file }}")&
+          offlineArgs=()
+          if [ "${{ inputs.lint-offline }}" = "true" ]; then
+            offlineArgs=(--offline)
+          fi
+          echo \$ hub-static-analyzer lint $cliRules --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --color=false "${includeArgs[@]}" "${excludeArgs[@]}" "${offlineArgs[@]}"
+          (./hub-static-analyzer lint $cliRules --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --color=false "${includeArgs[@]}" "${excludeArgs[@]}" "${offlineArgs[@]}" > "${{ inputs.lint-output-file }}")&
 
           pids+=($!)
         fi
 
-        if [ ${{ inputs.diff }} = "true" ]; then
-          echo \$ hub-static-analyzer diff --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --exclude "${{ inputs.exclude }}"
-          (./hub-static-analyzer diff --path "${{ inputs.path }}" ${{ inputs.diff-range }} --exclude "${{ inputs.exclude }}" | tee "${{ inputs.diff-output-file }}")&
+        if [ "${{ inputs.diff }}" = "true" ]; then
+          echo \$ hub-static-analyzer diff --path "${{ inputs.path }}" "${includeArgs[@]}" "${excludeArgs[@]}" ${{ inputs.diff-range }}
+          (./hub-static-analyzer diff --path "${{ inputs.path }}" "${includeArgs[@]}" "${excludeArgs[@]}" ${{ inputs.diff-range }} | tee "${{ inputs.diff-output-file }}")&
 
           pids+=($!)
         fi
@@ -114,8 +139,8 @@ runs:
           statuses+=($?)
         done
 
-        [ -s ${{ inputs.lint-output-file }} ] || rm -f ${{ inputs.lint-output-file }}
-        [ -s ${{ inputs.diff-output-file }} ] || rm -f ${{ inputs.diff-output-file }}
+        [ -s "${{ inputs.lint-output-file }}" ] || rm -f "${{ inputs.lint-output-file }}"
+        [ -s "${{ inputs.diff-output-file }}" ] || rm -f "${{ inputs.diff-output-file }}"
 
         # echo "Statuses ${statuses}"
 

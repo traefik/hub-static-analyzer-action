@@ -3,6 +3,7 @@
   extends: [
     "config:recommended",
     "helpers:pinGitHubActionDigests"
+    ":dependencyDashboard",
   ],
   enabledManagers: [
     "custom.regex",

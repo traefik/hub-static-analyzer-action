@@ -26,8 +26,6 @@
 This GitHub Action performs static analysis on Traefik Hub Custom Resource Definitions (CRD) manifests.  
 It allows you to lint the manifests and generate a diff report between commits.
 
-<!-- Here a link to the upcoming public binary repo -->
-
 > If you run this action in a public repository or if you are a GitHub Enterprise customer,
 you can leverage the SARIF output format to [submit a code scanning artifact](https://docs.github.com/en/code-security/code-scanning/integrating-with-code-scanning/uploading-a-sarif-file-to-github).
 
@@ -64,12 +62,18 @@ jobs:
         # By default, the current directory will be used.
         path: "path/to/manifests"
 
+        # Only include the matching manifests.
+        include: ""
+
+        # Exclude the matching manifests.
+        exclude: ""
+
         ## Linting options:
         # Enable linting.
         # By default, "false".
         lint: "true"
 
-        # Configure the output format of the linter. One of `unix`, `checkstyle` or `json`.
+        # Configure the output format of the linter. One of `unix`, `checkstyle`, `json` or `sarif`.
         # By default, `unix` format will be used.
         lint-format: "unix"
 
@@ -79,6 +83,10 @@ jobs:
 
         # Comma-separated list of rules to disable.
         lint-disabled-rules: ""
+
+        # Enable offline mode for additional validation checks.
+        # By default, "false".
+        lint-offline: "false"
 
         ## Diff report options:
         # Enable the generation of a diff report.
@@ -94,7 +102,7 @@ jobs:
 
         # The file will be overwritten if it exists.
         # By default, in "traefik-hub-static-analyzer-diff.out".
-        diff-output-file: "/path/to/output.lint.out"
+        diff-output-file: "/path/to/output.diff.out"
 ```
 
 ## Example
@@ -150,7 +158,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           diff: true
-          diff-range: "origin/${{ github.base_ref }}...pull/${{ github.ref_name }}"
+          diff-range: "origin/${{ github.base_ref }}...origin/${{ github.head_ref }}"
           diff-output-file: ./output.md
 
       - name: Prepare report
@@ -244,13 +252,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Lint Traefik Hub CRDs with hub-static-analyzer
+      - name: Diff Traefik Hub CRDs with hub-static-analyzer
         uses: traefik/hub-static-analyzer-action@main
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           diff: true
-          diff-range: "origin/${GITHUB_BASE_REF}...origin/${GITHUB_HEAD_REF}"
+          diff-range: "origin/${{ github.base_ref }}...origin/${{ github.head_ref }}"
           diff-output-file: ./output.md
 
       - name: Prepare report

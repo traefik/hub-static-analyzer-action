@@ -12,13 +12,17 @@ inputs:
     description: 'Path to the manifests within a Git repository'
     required: false
     default: "./"
+  include:
+    description: 'Only include the matching manifests'
+    required: false
+    default: ''
   exclude:
     description: 'Exclude the matching manifests'
     required: false
     default: ''
   # Lint options.
   lint:
-    description: 'Lint manifests. . Default: "false"'
+    description: 'Lint manifests. Default: "false"'
     required: false
     default: "false"
   lint-output-file:
@@ -26,9 +30,13 @@ inputs:
     required: false
     default: 'traefik-hub-static-analyzer-lint.out'
   lint-format:
-    description: 'Format, one of: unix, json, checkstyle'
+    description: 'Format, one of: unix, json, checkstyle, sarif'
     required: false
     default: 'unix'
+  lint-offline:
+    description: 'Enable offline mode for additional validation checks. Default: "false"'
+    required: false
+    default: "false"
   lint-disabled-rules:
     description: 'Comma-separated list of Rules to disable'
     required: false
@@ -51,21 +59,25 @@ runs:
   steps:
     - name: download hub-static-analyzer
       shell: bash
+      env:
+        INPUT_RUNNER_ARCH: ${{ runner.arch }}
+        INPUT_RUNNER_OS: ${{ runner.os }}
+        INPUT_VERSION: ${{ inputs.version }}
       run: |
         # Download hub-static-analyzer
         set -u
 
-        if [ ${{ runner.arch }} = "ARM64" ]; then
+        if [ "$INPUT_RUNNER_ARCH" = "ARM64" ]; then
           RELEASE_ARCH="arm64"
-        elif [ ${{ runner.arch }} = "X64" ]; then
+        elif [ "$INPUT_RUNNER_ARCH" = "X64" ]; then
           RELEASE_ARCH="amd64"
         else
           RELEASE_ARCH="amd64"
         fi
 
-        if [ ${{ runner.os }} = "macOS" ]; then
+        if [ "$INPUT_RUNNER_OS" = "macOS" ]; then
           RELEASE_OS="darwin"
-        elif [ ${{ runner.os }} = "Linux" ]; then
+        elif [ "$INPUT_RUNNER_OS" = "Linux" ]; then
           RELEASE_OS="linux"
         else
           RELEASE_OS="linux"
@@ -74,36 +86,76 @@ runs:
         PATTERN="static-analyzer-*-${RELEASE_OS}-${RELEASE_ARCH}*"
         REPOSITORY='traefik/hub'
         TARGET="hub-static-analyzer.tar.gz"
-        if [[ "${{ inputs.version }}" == "latest" ]]; then
+        if [[ "$INPUT_VERSION" == "latest" ]]; then
           gh release download --repo "${REPOSITORY}" --pattern "${PATTERN}" --output "${TARGET}" "static-analyzer-v1.7.0" > /dev/null
         else
-          gh release download --repo "${REPOSITORY}" --pattern "${PATTERN}" --output "${TARGET}" "static-analyzer-${{ inputs.version }}" > /dev/null
+          gh release download --repo "${REPOSITORY}" --pattern "${PATTERN}" --output "${TARGET}" "static-analyzer-${INPUT_VERSION}" > /dev/null
         fi
 
         tar -xf "$TARGET" --strip-components 1
     - name: run static analysis
       shell: bash
+      env:
+        INPUT_PATH: ${{ inputs.path }}
+        INPUT_INCLUDE: ${{ inputs.include }}
+        INPUT_EXCLUDE: ${{ inputs.exclude }}
+        INPUT_LINT: ${{ inputs.lint }}
+        INPUT_LINT_FORMAT: ${{ inputs.lint-format }}
+        INPUT_LINT_OFFLINE: ${{ inputs.lint-offline }}
+        INPUT_LINT_DISABLED_RULES: ${{ inputs.lint-disabled-rules }}
+        INPUT_LINT_OUTPUT_FILE: ${{ inputs.lint-output-file }}
+        INPUT_DIFF: ${{ inputs.diff }}
+        INPUT_DIFF_RANGE: ${{ inputs.diff-range }}
+        INPUT_DIFF_OUTPUT_FILE: ${{ inputs.diff-output-file }}
       run: |
         # hub-static-analyzer
         set -u
         set +e
 
-        if [ "${{ inputs.lint }}" = "true" ]; then
-          rules="${{ inputs.lint-disabled-rules }}"
+        # Validate boolean inputs.
+        for var in INPUT_LINT INPUT_LINT_OFFLINE INPUT_DIFF; do
+          if [[ "${!var}" != "true" && "${!var}" != "false" ]]; then
+            echo "::error::${var} must be 'true' or 'false', got '${!var}'"
+            exit 1
+          fi
+        done
+
+        if [[ ! "$INPUT_LINT_FORMAT" =~ ^(unix|json|checkstyle|sarif)$ ]]; then
+          echo "::error::lint-format must be one of: unix, json, checkstyle, sarif"
+          exit 1
+        fi
+
+        pids=()
+        statuses=()
+
+        commonArgs=(--path "$INPUT_PATH")
+        if [ -n "$INPUT_INCLUDE" ]; then
+          commonArgs+=(--include "$INPUT_INCLUDE")
+        fi
+        if [ -n "$INPUT_EXCLUDE" ]; then
+          commonArgs+=(--exclude "$INPUT_EXCLUDE")
+        fi
+
+        if [ "$INPUT_LINT" = "true" ]; then
+          lintArgs=(--format "$INPUT_LINT_FORMAT" --color=false)
+          if [ "$INPUT_LINT_OFFLINE" = "true" ]; then
+            lintArgs+=(--offline)
+          fi
+          rules="$INPUT_LINT_DISABLED_RULES"
           disabledRules=(${rules//,/ })
-          cliRules=""
           for r in "${disabledRules[@]}"; do
-            cliRules+="--rule.${r}=false "
+            lintArgs+=("--rule.${r}=false")
           done
-          echo \$ hub-static-analyzer lint $cliRules --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --exclude "${{ inputs.exclude }}"
-          (./hub-static-analyzer lint $cliRules --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --exclude "${{ inputs.exclude }}" > "${{ inputs.lint-output-file }}")&
+
+          echo \$ hub-static-analyzer lint "${commonArgs[@]}" "${lintArgs[@]}"
+          (./hub-static-analyzer lint "${commonArgs[@]}" "${lintArgs[@]}" > "$INPUT_LINT_OUTPUT_FILE")&
 
           pids+=($!)
         fi
 
-        if [ ${{ inputs.diff }} = "true" ]; then
-          echo \$ hub-static-analyzer diff --path "${{ inputs.path }}" --format "${{ inputs.lint-format }}" --exclude "${{ inputs.exclude }}"
-          (./hub-static-analyzer diff --path "${{ inputs.path }}" ${{ inputs.diff-range }} --exclude "${{ inputs.exclude }}" | tee "${{ inputs.diff-output-file }}")&
+        if [ "$INPUT_DIFF" = "true" ]; then
+          echo \$ hub-static-analyzer diff "${commonArgs[@]}" $INPUT_DIFF_RANGE
+          (./hub-static-analyzer diff "${commonArgs[@]}" $INPUT_DIFF_RANGE | tee "$INPUT_DIFF_OUTPUT_FILE")&
 
           pids+=($!)
         fi
@@ -114,10 +166,8 @@ runs:
           statuses+=($?)
         done
 
-        [ -s ${{ inputs.lint-output-file }} ] || rm -f ${{ inputs.lint-output-file }}
-        [ -s ${{ inputs.diff-output-file }} ] || rm -f ${{ inputs.diff-output-file }}
-
-        # echo "Statuses ${statuses}"
+        [ -s "$INPUT_LINT_OUTPUT_FILE" ] || rm -f "$INPUT_LINT_OUTPUT_FILE"
+        [ -s "$INPUT_DIFF_OUTPUT_FILE" ] || rm -f "$INPUT_DIFF_OUTPUT_FILE"
 
         for st in ${statuses[@]}; do
           if [[ ${st} -ne 0 ]]; then
